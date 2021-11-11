@@ -3,6 +3,7 @@ const openModalBtn = document.querySelector('.present__order-btn');
 const closeModalBtn = document.querySelector('.modal__close');
 const burgerBtn = document.querySelector('.header__contacts-burger');
 const burgerMenu = document.querySelector('.header__contacts');
+const portfolioList = document.querySelector('.portfolio__list');
 
 const disableScroll = () => {
   document.body.dataset.scrollY = window.scrollY;
@@ -91,6 +92,53 @@ const handlerBurger = (btn, menu, openSelector) => {
     }
   });
 };
+
+portfolioList.addEventListener('click', e => {
+  const pageOverlay = document.createElement('div');
+  pageOverlay.classList.add('page__overlay');
+
+  const target = e.target;
+  const card = target.closest('.card');
+
+  if (card) {
+    document.body.append(pageOverlay);
+    const title = card.querySelector('.card__client');
+
+    const picture = document.createElement('picture');
+
+    picture.style.cssText = `
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 1440px;
+    `;
+
+    picture.innerHTML = `
+      <source srcset="${card.dataset.fullImage}.avif" type="image/avif">
+      <source srcset="${card.dataset.fullImage}.webp" type="image/webp">
+      <img src="${card.dataset.fullImage}.jpg" alt="${title.textContent}">
+    `;
+
+    pageOverlay.append(picture);
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        enableScroll();
+        pageOverlay.textContent = '';
+        pageOverlay.remove();
+      }
+    });
+
+    pageOverlay.addEventListener('click', () => {
+      enableScroll();
+      pageOverlay.textContent = '';
+      pageOverlay.remove();
+    })
+    disableScroll();
+  }
+})
 
 handlerModal(openModalBtn, 'page__overlay_modal_open', modal, closeModalBtn);
 handlerBurger(burgerBtn, burgerMenu, 'header__contacts_open');
