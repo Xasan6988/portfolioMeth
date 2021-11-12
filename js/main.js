@@ -4,6 +4,7 @@ const closeModalBtn = document.querySelector('.modal__close');
 const burgerBtn = document.querySelector('.header__contacts-burger');
 const burgerMenu = document.querySelector('.header__contacts');
 const portfolioList = document.querySelector('.portfolio__list');
+const portfolioBtn = document.querySelector('.portfolio__add');
 
 const disableScroll = () => {
   document.body.dataset.scrollY = window.scrollY;
@@ -25,7 +26,7 @@ const enableScroll = () => {
   document.body.style.cssText = '';
   window.scroll({
     top: document.body.dataset.scrollY,
-  })
+  });
 };
 
 
@@ -138,7 +139,85 @@ portfolioList.addEventListener('click', e => {
     })
     disableScroll();
   }
-})
+});
+
+{// Работа с БД
+const COUNT_CARD = 2;
+
+const getData = () => {
+  return fetch('db.json')
+  .then(data => {
+    if (data.ok) {
+      return data.json();
+    } else {
+      throw `Что то пошло не так, попробуйте позже, ошибка: ${data.status}`;
+    }
+  })
+  .catch(e => console.log(e.message));
+};
+
+  const createStore = async () => {
+  const data = await getData();
+
+  return {
+    data,
+    counter: 0,
+    count: COUNT_CARD,
+    get length() {
+      return this.data.length;
+    },
+    get cardData() {
+      const renderData = this.data.slice(this.counter, this.counter + this.count);
+      console.log(renderData)
+      this.counter += renderData.length;
+      return renderData;
+    },
+  };
+};
+
+  const renderCard = data => {
+    const cards = data.map(({preview, year, type, client, image}) => {
+      const li = document.createElement('li');
+      li.classList.add('portfolio__item');
+      li.innerHTML = `
+      <li class="portfolio__item">
+            <article class="card" tabindex="0" role="button" aria-label="открыть макет" data-full-image="${image}">
+              <picture class="card__picture">
+                <source srcset="${preview}.avif" type="image/avif">
+                <source srcset="${preview}.webp" type="image/webp">
+                <img src="${preview}.jpg" alt="превью ${client}" width="166" height="103">
+              </picture>
+
+              <p class="card__data">
+                <span class="card__client">Клиент: ${client}</span>
+                <time class="card__date" datetime="${year}">год: ${year}</time>
+              </p>
+
+              <h3 class="card__title">${type}</h3>
+            </article>
+          </li>
+      `
+      return li;
+    });
+    portfolioList.append(...cards)
+  };
+
+  const initPortfolio = async () => {
+    const store = await createStore();
+    console.log(store)
+    renderCard(store.cardData);
+
+    portfolioBtn.addEventListener('click', () => {
+      renderCard(store.cardData);
+      console.log(store.length, store.counter)
+      if (store.length === store.counter) {
+        portfolioBtn.remove();
+      };
+    });
+  };
+  initPortfolio();
+}
+
 
 handlerModal(openModalBtn, 'page__overlay_modal_open', modal, closeModalBtn);
 handlerBurger(burgerBtn, burgerMenu, 'header__contacts_open');
